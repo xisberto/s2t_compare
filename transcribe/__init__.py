@@ -1,1 +1,1 @@
-from transcribe.Transcribe import TranscribeInterface
+from transcribe.TranscribeInterface import TranscribeInterface
