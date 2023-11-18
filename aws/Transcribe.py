@@ -39,3 +39,7 @@ class Transcribe(TranscribeInterface):
     def get_job_status(self, job_id) -> str:
         job = self.client.get_transcription_job(TranscriptionJobName=job_id)
         return job['TranscriptionJob']['TranscriptionJobStatus']
+
+    def get_job_result(self, job_id) -> str:
+        job = self.client.get_transcription_job(TranscriptionJobName=job_id)
+        return job['TranscriptionJob']['Transcript']['TranscriptFileUri']

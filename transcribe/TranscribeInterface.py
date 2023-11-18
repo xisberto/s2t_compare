@@ -29,3 +29,11 @@ class TranscribeInterface:
         :return: 'QUEUED'|'IN_PROGRESS'|'FAILED'|'COMPLETED'
         """
         pass
+
+    def get_job_result(self, job_id) -> str:
+        """
+        Gets a Speech to Text transcribe job result
+        :param job_id: the job id
+        :return: the url to the result
+        """
+        pass
