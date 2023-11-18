@@ -11,9 +11,13 @@ from transcribe import TranscribeInterface
 class Transcribe(TranscribeInterface):
     def __init__(self, bucket_name):
         self.logger = logging.getLogger()
+        # A configuração do boto3 ocorre através das variáveis de ambiente
         s3 = boto3.resource('s3')
         self.bucket = s3.Bucket(bucket_name)
         self.client = boto3.client('transcribe')
+
+    def get_provider_name(self) -> str:
+        return "AWS"
 
     def upload(self, file_path: Path) -> str:
         self.logger.info(f"Uploading {file_path}")

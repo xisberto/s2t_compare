@@ -3,6 +3,9 @@ from pathlib import Path
 
 class TranscribeInterface:
 
+    def get_provider_name(self) -> str:
+        pass
+
     def upload(self, file_path: Path) -> str:
         """
         Uploads a local file to the object storage service
