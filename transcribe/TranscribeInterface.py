@@ -1,9 +1,9 @@
-import logging
+from pathlib import Path
 
 
 class TranscribeInterface:
 
-    async def upload(self, file_path: str) -> str:
+    def upload(self, file_path: Path) -> str:
         """
         Uploads a local file to the object storage service
         :param file_path: the local file path
@@ -11,10 +11,18 @@ class TranscribeInterface:
         """
         pass
 
-    async def transcribe(self, file_url: str) -> str:
+    def start_transcribe_job(self, file_url: str) -> str:
         """
         Starts a Speech to Text transcribe job on the provider service
         :param file_url: the object storage file URL containing the audio
-        :return: ???
+        :return: the transcribe job id
+        """
+        pass
+
+    def get_job_status(self, job_id) -> str:
+        """
+        Gets a Speech to Text transcribe job status
+        :param job_id: the job id
+        :return: 'QUEUED'|'IN_PROGRESS'|'FAILED'|'COMPLETED'
         """
         pass
