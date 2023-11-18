@@ -43,4 +43,6 @@ class Bot:
         self.logger.info(file.file_id)
         file_cache_path = await file.download_to_drive(custom_path=f"cache/{file.file_id}.oga")
         for transcribe in self.services:
-            transcribe.upload(f"cache/{file_cache_path.name}")
+            url = transcribe.upload(file_cache_path)
+            self.logger.info(f"Uploaded to {url}")
+            transcribe.start_transcribe_job(url)
