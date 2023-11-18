@@ -12,14 +12,14 @@ class Bot:
         builder.token(token)
         builder.persistence(PicklePersistence('persistence.pickle'))
         self.logger = logging.getLogger()
-        self.services = []
+        self.services = {}
         self.job_monitor_interval = 10
         self.application = builder.build()
         self.application.add_handler(CommandHandler('start', self.cmd_start))
         self.application.add_handler(MessageHandler(filters.VOICE, self.audio_handler))
 
     def add_transcribe(self, transcribe: TranscribeInterface):
-        self.services.append(transcribe)
+        self.services[transcribe.get_provider_name()] = transcribe
 
     def start(self):
         self.application.run_polling()
@@ -42,7 +42,7 @@ class Bot:
         self.logger.info(file.file_path)
         self.logger.info(file.file_id)
         file_cache_path = await file.download_to_drive(custom_path=f"cache/{file.file_id}.oga")
-        for transcribe in self.services:
+        for transcribe in self.services.values():
             url = transcribe.upload(file_cache_path)
             self.logger.info(f"Uploaded to {url}")
             job_id = transcribe.start_transcribe_job(url)
@@ -69,12 +69,11 @@ class Bot:
         provider_name = context.job.data
         job_id = context.job.name
         self.logger.info(f"Getting status for {job_id} on {provider_name}")
-        provider = [p for p in self.services if p.get_provider_name() == provider_name][0]
+        provider = self.services[provider_name]
         status = provider.get_job_status(job_id)
         self.logger.info(f"{job_id} on {provider_name} status: {status}")
         if status == 'COMPLETED':
             await context.bot.send_message(context.job.chat_id, f"Transcrição na {provider_name} concluída.")
-            # TODO get job result
             context.job.schedule_removal()
         elif status == 'FAILED':
             await context.bot.send_message(context.job.chat_id, f"Transcrição na {provider_name} falhou.")
