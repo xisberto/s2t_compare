@@ -59,7 +59,7 @@ class Bot:
         self.application.job_queue.run_repeating(
             callback=self.callback_monitor,
             interval=self.job_monitor_interval,
-            first=0,
+            first=1,
             name=job_id,
             chat_id=chat_id,
             data=provider_name
@@ -70,12 +70,13 @@ class Bot:
         job_id = context.job.name
         self.logger.info(f"Getting status for {job_id} on {provider_name}")
         provider = self.services[provider_name]
-        status = provider.get_job_status(job_id)
-        self.logger.info(f"{job_id} on {provider_name} status: {status}")
-        if status == 'COMPLETED':
-            await context.bot.send_message(context.job.chat_id, f"Transcrição na {provider_name} concluída.")
+        job = provider.get_job_status(job_id)
+        self.logger.info(f"{job_id} on {provider_name} status: {job.status}")
+        if job.status == 'COMPLETED':
+            await context.bot.send_message(context.job.chat_id, f"Transcrição na {provider_name} concluída.\n\n"
+                                                                f"{job.result}")
             context.job.schedule_removal()
-        elif status == 'FAILED':
+        elif job.status == 'FAILED':
             await context.bot.send_message(context.job.chat_id, f"Transcrição na {provider_name} falhou.")
             context.job.schedule_removal()
         else:
