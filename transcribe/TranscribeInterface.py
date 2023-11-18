@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from transcribe import Job
+
 
 class TranscribeInterface:
 
@@ -22,18 +24,10 @@ class TranscribeInterface:
         """
         pass
 
-    def get_job_status(self, job_id) -> str:
+    def get_job(self, job_id) -> Job:
         """
         Gets a Speech to Text transcribe job status
         :param job_id: the job id
         :return: 'QUEUED'|'IN_PROGRESS'|'FAILED'|'COMPLETED'
-        """
-        pass
-
-    def get_job_result(self, job_id) -> str:
-        """
-        Gets a Speech to Text transcribe job result
-        :param job_id: the job id
-        :return: the url to the result
         """
         pass
