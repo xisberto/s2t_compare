@@ -17,3 +17,6 @@ AWS_SECRET_ACCESS_KEY=XXXXXXXXX
 AWS_DEFAULT_REGION=XXXXXXXX
 AWS_BUCKET=XXXXXXXXX
 ```
+
+Os parâmetros de conexão com a AWS também devem ser adicionados à configuração
+de execução do projeto como variáveis de ambiente.
