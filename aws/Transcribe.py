@@ -4,8 +4,9 @@ import re
 from pathlib import Path
 
 import boto3
+import requests
 
-from transcribe import TranscribeInterface
+from transcribe import TranscribeInterface, Job
 
 
 class Transcribe(TranscribeInterface):
@@ -36,10 +37,17 @@ class Transcribe(TranscribeInterface):
         )
         return job_name
 
-    def get_job_status(self, job_id) -> str:
+    def get_job_status(self, job_id) -> Job:
         job = self.client.get_transcription_job(TranscriptionJobName=job_id)
-        return job['TranscriptionJob']['TranscriptionJobStatus']
+        status = job['TranscriptionJob']['TranscriptionJobStatus']
 
-    def get_job_result(self, job_id) -> str:
-        job = self.client.get_transcription_job(TranscriptionJobName=job_id)
-        return job['TranscriptionJob']['Transcript']['TranscriptFileUri']
+        if status != 'COMPLETED':
+            return Job(job_id, status, "")
+
+        transcript_uri = job['TranscriptionJob']['Transcript']['TranscriptFileUri']
+        result = requests.get(transcript_uri)
+        if result.status_code == 200:
+            response = result.json()
+            self.logger.info(response)
+            transcript = response['results']['transcripts'][0]['transcript']
+            return Job(job_id, status, transcript)
