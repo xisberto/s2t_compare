@@ -2,6 +2,8 @@ import logging
 import os
 
 from dotenv import dotenv_values
+
+import aws
 from bot import Bot
 
 if __name__ == '__main__':
@@ -13,4 +15,7 @@ if __name__ == '__main__':
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         level=logging.INFO
     )
-    Bot(config['TOKEN'], config['AWS_BUCKET']).start()
+    aws_transcribe = aws.Transcribe(config['AWS_BUCKET'])
+    bot = Bot(config['TOKEN'])
+    bot.add_transcribe(aws_transcribe)
+    bot.start()

@@ -4,19 +4,22 @@ from telegram import Update
 from telegram.ext import Application, PicklePersistence, CommandHandler, MessageHandler, filters, \
     CallbackContext
 
-from aws import Transcribe
+from transcribe import TranscribeInterface
 
 
 class Bot:
-    def __init__(self, token, bucket_name):
+    def __init__(self, token):
         builder = Application.builder()
         builder.token(token)
         builder.persistence(PicklePersistence('persistence.pickle'))
         self.logger = logging.getLogger()
-        self.aws = Transcribe(bucket_name)
+        self.services = []
         self.application = builder.build()
         self.application.add_handler(CommandHandler('start', self.cmd_start))
         self.application.add_handler(MessageHandler(filters.VOICE, self.audio_handler))
+
+    def add_transcribe(self, transcribe: TranscribeInterface):
+        self.services.append(transcribe)
 
     def start(self):
         self.application.run_polling()
@@ -39,4 +42,5 @@ class Bot:
         self.logger.info(file.file_path)
         self.logger.info(file.file_id)
         file_cache_path = await file.download_to_drive(custom_path=f"cache/{file.file_id}.oga")
-        self.aws.upload(f"cache/{file_cache_path.name}")
+        for transcribe in self.services:
+            transcribe.upload(f"cache/{file_cache_path.name}")
