@@ -20,3 +20,11 @@ AWS_BUCKET=XXXXXXXXX
 
 Os parâmetros de conexão com a AWS também devem ser adicionados à configuração
 de execução do projeto como variáveis de ambiente.
+
+### Docker
+
+O projeto pode ser executado em docker com o comando abaixo:
+
+```shell
+docker-compose up --build
+```
