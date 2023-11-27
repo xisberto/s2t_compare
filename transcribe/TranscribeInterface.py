@@ -8,7 +8,7 @@ class TranscribeInterface:
     def get_provider_name(self) -> str:
         pass
 
-    def upload(self, file_path: Path) -> str:
+    async def upload(self, file_path: Path) -> str:
         """
         Uploads a local file to the object storage service
         :param file_path: the local file path

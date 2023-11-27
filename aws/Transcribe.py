@@ -20,7 +20,7 @@ class Transcribe(TranscribeInterface):
     def get_provider_name(self) -> str:
         return "AWS"
 
-    def upload(self, file_path: Path) -> str:
+    async def upload(self, file_path: Path) -> str:
         self.logger.info(f"Uploading {file_path}")
         with open(file_path, 'rb') as data:
             self.bucket.put_object(Key=file_path.name, Body=data)
@@ -37,7 +37,7 @@ class Transcribe(TranscribeInterface):
         )
         return job_name
 
-    def get_job_status(self, job_id) -> Job:
+    def get_job(self, job_id) -> Job:
         job = self.client.get_transcription_job(TranscriptionJobName=job_id)
         status = job['TranscriptionJob']['TranscriptionJobStatus']
 
@@ -48,6 +48,5 @@ class Transcribe(TranscribeInterface):
         result = requests.get(transcript_uri)
         if result.status_code == 200:
             response = result.json()
-            self.logger.info(response)
             transcript = response['results']['transcripts'][0]['transcript']
             return Job(job_id, status, transcript)

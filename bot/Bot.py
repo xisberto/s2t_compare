@@ -49,7 +49,7 @@ class Bot:
         self.logger.info(file.file_id)
         file_cache_path = await file.download_to_drive(custom_path=f"cache/{file.file_id}.oga")
         for transcribe in self.services.values():
-            url = transcribe.upload(file_cache_path)
+            url = await transcribe.upload(file_cache_path)
             self.logger.info(f"Uploaded to {url}")
             job_id = transcribe.start_transcribe_job(url)
             await self.start_monitoring_job(transcribe, job_id, update.effective_chat.id)
@@ -90,7 +90,7 @@ class Bot:
         job_id = context.job.name
         self.logger.info(f"Getting status for {job_id} on {provider_name}")
         provider = self.services[provider_name]
-        job = provider.get_job_status(job_id)
+        job = provider.get_job(job_id)
         self.logger.info(f"{job_id} on {provider_name} status: {job.status}")
         if job.status == 'COMPLETED':
             await self.clear_job(context)
