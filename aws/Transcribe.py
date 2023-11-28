@@ -20,22 +20,26 @@ class Transcribe(TranscribeInterface):
     def get_provider_name(self) -> str:
         return "AWS"
 
-    async def upload(self, file_path: Path) -> str:
+    def upload(self, file_path: Path) -> str:
         self.logger.info(f"Uploading {file_path}")
         with open(file_path, 'rb') as data:
             self.bucket.put_object(Key=file_path.name, Body=data)
         return f'https://{self.bucket.name}.s3.{os.getenv("AWS_DEFAULT_REGION")}.amazonaws.com/{file_path.name}'
 
     def start_transcribe_job(self, file_url: str) -> str:
-        job_name = re.findall(r"([a-zA-Z0-9_-]+).(oga)", file_url)[0][0]
-        self.logger.info(f"Starting Transcription for {job_name}")
+        job_id = re.findall(r"([a-zA-Z0-9_-]+).(oga)", file_url)[0][0]
+        self.logger.info(f"Starting Transcription for {job_id}")
         self.client.start_transcription_job(
-            TranscriptionJobName=job_name,
+            TranscriptionJobName=job_id,
             MediaFormat='ogg',
             LanguageCode="pt-BR",
             Media={'MediaFileUri': file_url}
         )
-        return job_name
+
+        job = Job(job_id, 'RUNNING', "")
+        while job.status != 'COMPLETED' or job.status != 'FAILED':
+            job = self.get_job(job_id)
+        return job.result
 
     def get_job(self, job_id) -> Job:
         job = self.client.get_transcription_job(TranscriptionJobName=job_id)
