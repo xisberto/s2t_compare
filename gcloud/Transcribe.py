@@ -20,8 +20,7 @@ class Transcribe(TranscribeInterface):
 
     def upload(self, file_path: Path) -> str:
         blob = self.bucket.blob(file_path.name)
-        precondition = 0
-        blob.upload_from_filename(file_path.absolute(), if_generation_match=precondition)
+        blob.upload_from_filename(file_path.absolute())
         return f'gs://ppgia-bucket/{file_path.name}'
 
     def start_transcribe_job(self, file_url: str) -> str:
