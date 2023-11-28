@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import re
@@ -11,7 +12,7 @@ from transcribe import TranscribeInterface, Job
 
 class Transcribe(TranscribeInterface):
     def __init__(self, bucket_name):
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger("AWS")
         # A configuração do boto3 ocorre através das variáveis de ambiente
         s3 = boto3.resource('s3')
         self.bucket = s3.Bucket(bucket_name)
@@ -28,6 +29,8 @@ class Transcribe(TranscribeInterface):
 
     def start_transcribe_job(self, file_url: str) -> str:
         job_id = re.findall(r"([a-zA-Z0-9_-]+).(og[agx])", file_url)[0][0]
+        now = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        job_id = f"{now}_{job_id}"
         self.logger.info(f"Starting Transcription for {job_id}")
         self.client.start_transcription_job(
             TranscriptionJobName=job_id,
@@ -39,7 +42,7 @@ class Transcribe(TranscribeInterface):
         job = Job(job_id, 'IN_PROGRESS', "")
         while job.status == 'IN_PROGRESS':
             job = self.get_job(job_id)
-            print(job.status)
+        self.logger.info("Transcription completed")
         return job.result
 
     def get_job(self, job_id) -> Job:
