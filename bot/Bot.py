@@ -48,11 +48,12 @@ class Bot:
         self.logger.info(file.file_path)
         self.logger.info(file.file_id)
         file_cache_path = await file.download_to_drive(custom_path=f"cache/{file.file_id}.oga")
-        for transcribe in self.services.values():
-            url = await transcribe.upload(file_cache_path)
+        for service in self.services.values():
+            url = service.upload(file_cache_path)
             self.logger.info(f"Uploaded to {url}")
-            job_id = transcribe.start_transcribe_job(url)
-            await self.start_monitoring_job(transcribe, job_id, update.effective_chat.id)
+            result = service.start_transcribe_job(url)
+            await update.message.reply_text(f"Transcrição na {service.get_provider_name()} concluída.\n\n"
+                                            f"{result}")
 
     async def start_monitoring_job(self, provider: TranscribeInterface, job_id: str, chat_id: int):
         """
