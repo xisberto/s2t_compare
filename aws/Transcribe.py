@@ -27,7 +27,7 @@ class Transcribe(TranscribeInterface):
         return f'https://{self.bucket.name}.s3.{os.getenv("AWS_DEFAULT_REGION")}.amazonaws.com/{file_path.name}'
 
     def start_transcribe_job(self, file_url: str) -> str:
-        job_id = re.findall(r"([a-zA-Z0-9_-]+).(oga)", file_url)[0][0]
+        job_id = re.findall(r"([a-zA-Z0-9_-]+).(og[agx])", file_url)[0][0]
         self.logger.info(f"Starting Transcription for {job_id}")
         self.client.start_transcription_job(
             TranscriptionJobName=job_id,
@@ -36,9 +36,10 @@ class Transcribe(TranscribeInterface):
             Media={'MediaFileUri': file_url}
         )
 
-        job = Job(job_id, 'RUNNING', "")
-        while job.status != 'COMPLETED' or job.status != 'FAILED':
+        job = Job(job_id, 'IN_PROGRESS', "")
+        while job.status == 'IN_PROGRESS':
             job = self.get_job(job_id)
+            print(job.status)
         return job.result
 
     def get_job(self, job_id) -> Job:

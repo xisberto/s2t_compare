@@ -15,14 +15,18 @@ class Cli:
         self.services.append(transcribe)
 
     def start(self):
+        result = []
         for service in self.services:
-            self.upload_and_start_transcribe(service)
+            result.append({
+                'result': self.upload_and_start_transcribe(service),
+                'provider': service.get_provider_name()
+            })
+        return result
 
     def upload_and_start_transcribe(self, provider: TranscribeInterface):
         url = provider.upload(self.file)
         self.logger.info(f"Enviado arquivo para {provider.get_provider_name()}")
-        job_id = provider.start_transcribe_job(url)
-        self.start_monitoring_job(provider, job_id)
+        return provider.start_transcribe_job(url)
 
     def start_monitoring_job(self, provider: TranscribeInterface, job_id: str):
         self.monitor_jobs.append(job_id)
@@ -35,7 +39,7 @@ class Cli:
 
     def callback_monitor(self, provider: TranscribeInterface, job_id: str):
         job = provider.get_job(job_id)
-        if job.status == 'COMPLETED' or job.status == 'FAILED':
+        if job is not None and (job.status == 'COMPLETED' or job.status == 'FAILED'):
             self.monitor_jobs.remove(job_id)
             return job
         else:

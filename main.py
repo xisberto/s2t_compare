@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -7,6 +8,7 @@ from pathlib import Path
 from dotenv import dotenv_values
 
 import aws
+import gcloud
 from bot import Bot
 from cli import Cli
 
@@ -28,11 +30,13 @@ if __name__ == '__main__':
     print(args)
 
     aws_transcribe = aws.Transcribe(config['AWS_BUCKET'])
+    gcloud_transcribe = gcloud.Transcribe(config['GCLOUD_BUCKET'])
     # google
     # azure
     if args.bot:
         bot = Bot(config['TOKEN'])
         bot.add_transcribe(aws_transcribe)
+        bot.add_transcribe(gcloud_transcribe)
         bot.start()
     else:
         file_path = Path(args.file)
@@ -41,4 +45,6 @@ if __name__ == '__main__':
             raise SystemExit(1)
         cli = Cli(file_path)
         cli.add_transcribe(aws_transcribe)
-        cli.start()
+        cli.add_transcribe(gcloud_transcribe)
+        print(json.dumps(cli.start(), indent=2))
+

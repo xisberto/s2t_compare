@@ -4,8 +4,6 @@ from google.cloud import speech
 from google.cloud import storage
 import os
 
-from google.longrunning.operations_pb2 import GetOperationRequest
-
 from transcribe import TranscribeInterface, Job
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./authentication.json"
@@ -20,10 +18,10 @@ class Transcribe(TranscribeInterface):
     def get_provider_name(self) -> str:
         return "Google"
 
-    async def upload(self, file_path: Path) -> str:
-        # blob = self.bucket.blob(file_path.name)
-        # precondition = 0
-        # blob.upload_from_filename(file_path.absolute(), if_generation_match=precondition)
+    def upload(self, file_path: Path) -> str:
+        blob = self.bucket.blob(file_path.name)
+        precondition = 0
+        blob.upload_from_filename(file_path.absolute(), if_generation_match=precondition)
         return f'gs://ppgia-bucket/{file_path.name}'
 
     def start_transcribe_job(self, file_url: str) -> str:
@@ -37,16 +35,18 @@ class Transcribe(TranscribeInterface):
         )
 
         client = speech.SpeechClient()
-        operation = client.long_running_recognize(config=config, audio=audio)
-        return operation.operation.request_id
 
-    # def get_job(self, job_id) -> Job:
-    #     return Job(job_id, 'COMPLETED', self.transcript)
+        response = client.recognize(config=config, audio=audio)
+        alternative_transcript = ''
+        for result in response.results:
+            best_alternative = result.alternatives[0]
+            alternative_transcript = best_alternative.transcript
+
+        return alternative_transcript
+
     def get_job(self, job_id) -> Job:
-        request = GetOperationRequest(name=job_id)
-        operation = self.client.get_operation(request)
-        print(operation)
-
+        # TODO
+        pass
 
 #
 # def transcribe_gcs(gcs_uri: str) -> str:
