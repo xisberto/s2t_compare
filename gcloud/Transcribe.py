@@ -1,8 +1,38 @@
+from pathlib import Path
+
 from google.cloud import speech
+from google.cloud import storage
 import os
+
+from transcribe import TranscribeInterface, Job
 
 # os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./ppgia-405916-05b747e7f98d.json"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./ppgia-405916-a846a23e57a9.json"
+
+
+class Transcribe(TranscribeInterface):
+    def __init__(self, project, credentials, bucket_name):
+        self.client = speech.SpeechClient()
+        gcs = storage.Client(project, credentials)
+        self.bucket = gcs.get_bucket(bucket_name)
+
+    def get_provider_name(self) -> str:
+        return "Google"
+
+    def upload(self, file_path: Path) -> str:
+        blob = self.bucket.blob(file_path.name)
+        precondition = 0
+        blob.upload_from_filename(file_path.absolute(), if_generation_match=precondition)
+        return blob.public_url
+
+    def start_transcribe_job(self, file_url: str) -> str:
+        # TODO
+        pass
+
+    def get_job(self, job_id) -> Job:
+        # TODO
+        pass
+
 
 def transcribe_gcs(gcs_uri: str) -> str:
     """Asynchronously transcribes the audio file specified by the gcs_uri.
