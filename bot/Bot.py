@@ -1,7 +1,7 @@
 import logging
 
 from telegram import Update
-from telegram.ext import Application, PicklePersistence, CommandHandler, MessageHandler, filters, ContextTypes, Job
+from telegram.ext import Application, PicklePersistence, CommandHandler, MessageHandler, filters, ContextTypes
 
 from transcribe import TranscribeInterface
 
@@ -49,71 +49,15 @@ class Bot:
         self.logger.info(file.file_id)
         file_cache_path = await file.download_to_drive(custom_path=f"cache/{file.file_id}.oga")
         for service in self.services.values():
+            message = await update.message.reply_text(f"Transcrição no provedor {service.get_provider_name()}\n\n"
+                                                      f"Iniciando upload")
             url = service.upload(file_cache_path)
-            self.logger.info(f"Uploaded to {url}")
+            await context.bot.edit_message_text(chat_id=message.chat_id,
+                                                message_id=message.id,
+                                                text=f"Transcrição no provedor {service.get_provider_name()}\n\n"
+                                                     f"Upload concluído")
             result = service.start_transcribe_job(url)
-            await update.message.reply_text(f"Transcrição na {service.get_provider_name()} concluída.\n\n"
-                                            f"{result}")
-
-    async def start_monitoring_job(self, provider: TranscribeInterface, job_id: str, chat_id: int):
-        """
-        Adiciona um job ao application.job_queue para verificar o andamento do job
-        :param provider:
-        :param job_id:
-        :param chat_id:
-        :return:
-        """
-        # chat_data[provider_name] é uma lista contendo os jobs em andamento para aquele chat
-        chat_data = await self.application.persistence.get_chat_data()
-        provider_name = provider.get_provider_name()
-        if provider_name not in chat_data:
-            chat_data[provider_name] = [job_id]
-        else:
-            chat_data[provider_name].append(job_id)
-        await self.application.persistence.update_chat_data(chat_id, chat_data)
-        self.application.job_queue.run_repeating(
-            callback=self.callback_monitor,
-            interval=self.job_monitor_interval,
-            first=1,
-            name=job_id,
-            chat_id=chat_id,
-            data=provider_name
-        )
-
-    async def callback_monitor(self, context: ContextTypes.DEFAULT_TYPE):
-        """
-        Verifica o andamento de um job e retorna o resultado. Deve ser chamado usando job_queue.
-        O parâmetro data deve ser alimentado com o nome do provedor de nuvem (chave de chat_id).
-        :param context:
-        :return:
-        """
-        provider_name = context.job.data
-        job_id = context.job.name
-        self.logger.info(f"Getting status for {job_id} on {provider_name}")
-        provider = self.services[provider_name]
-        job = provider.get_job(job_id)
-        self.logger.info(f"{job_id} on {provider_name} status: {job.status}")
-        if job.status == 'COMPLETED':
-            await self.clear_job(context)
-            await context.bot.send_message(context.job.chat_id, f"Transcrição na {provider_name} concluída.\n\n"
-                                                                f"{job.result}")
-        elif job.status == 'FAILED':
-            await self.clear_job(context)
-            await context.bot.send_message(context.job.chat_id, f"Transcrição na {provider_name} falhou.")
-        else:
-            await context.bot.send_message(context.job.chat_id, f"Transcrição na {provider_name} ainda executando.")
-
-    async def clear_job(self, context: ContextTypes.DEFAULT_TYPE):
-        """
-        Limpa os dados de um job.
-        Remove a informação daquele job de chat_data.
-        Remove o job da job_queue
-        :param context:
-        :return:
-        """
-        job_id = context.job.name
-        provider_name = context.job.data
-        chat_data = context.chat_data
-        chat_data[provider_name].remove(job_id)
-        await self.application.persistence.update_chat_data(context.job.chat_id, chat_data)
-        context.job.schedule_removal()
+            await context.bot.edit_message_text(chat_id=message.chat_id,
+                                                message_id=message.id,
+                                                text=f"Transcrição no provedor {service.get_provider_name()}\n\n"
+                                                     f"{result}")
