@@ -50,14 +50,15 @@ class Bot:
         file_cache_path = await file.download_to_drive(custom_path=f"cache/{file.file_id}.oga")
         for service in self.services.values():
             message = await update.message.reply_text(f"Transcrição no provedor {service.get_provider_name()}\n\n"
-                                                      f"Iniciando upload")
+                                                      f"Realizando upload")
             url = service.upload(file_cache_path)
             await context.bot.edit_message_text(chat_id=message.chat_id,
                                                 message_id=message.id,
                                                 text=f"Transcrição no provedor {service.get_provider_name()}\n\n"
-                                                     f"Upload concluído")
+                                                     f"Transcrição iniciada")
             result = service.start_transcribe_job(url)
             await context.bot.edit_message_text(chat_id=message.chat_id,
                                                 message_id=message.id,
                                                 text=f"Transcrição no provedor {service.get_provider_name()}\n\n"
+                                                     f"Transcrição concluída:\n\n"
                                                      f"{result}")
